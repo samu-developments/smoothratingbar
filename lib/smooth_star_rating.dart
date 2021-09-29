@@ -1,27 +1,26 @@
-library smooth_star_rating;
-
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-typedef void RatingChangeCallback(double rating);
+typedef RatingChangeCallback = void Function(double rating);
 
-class SmoothStarRating extends StatefulWidget {
+class StarRating extends StatefulWidget {
   final int starCount;
   final double rating;
-  final RatingChangeCallback onRated;
-  final Color color;
-  final Color borderColor;
+  final RatingChangeCallback? onRated;
+  final Color? color;
+  final Color? borderColor;
   final double size;
   final bool allowHalfRating;
   final IconData filledIconData;
   final IconData halfFilledIconData;
   final IconData
-      defaultIconData; //this is needed only when having fullRatedIconData && halfRatedIconData
+  defaultIconData; //this is needed only when having fullRatedIconData && halfRatedIconData
   final double spacing;
   final bool isReadOnly;
-  SmoothStarRating({
+  StarRating({
+    Key? key,
     this.starCount = 5,
     this.isReadOnly = false,
     this.spacing = 0.0,
@@ -33,22 +32,21 @@ class SmoothStarRating extends StatefulWidget {
     this.size = 25,
     this.filledIconData = Icons.star,
     this.halfFilledIconData = Icons.star_half,
-    this.allowHalfRating = true,
-  }) {
-    assert(this.rating != null);
-  }
+    this.allowHalfRating = false,
+  }) : super(key: key);
+
   @override
-  _SmoothStarRatingState createState() => _SmoothStarRatingState();
+  _StarRatingState createState() => _StarRatingState();
 }
 
-class _SmoothStarRatingState extends State<SmoothStarRating> {
+class _StarRatingState extends State<StarRating> {
   final double halfStarThreshold =
-      0.53; //half star value starts from this number
+  0.53; //half star value starts from this number
 
   //tracks for user tapping on this widget
   bool isWidgetTapped = false;
-  double currentRating;
-  Timer debounceTimer;
+  late double currentRating;
+  Timer? debounceTimer;
   @override
   void initState() {
     currentRating = widget.rating;
@@ -83,8 +81,8 @@ class _SmoothStarRatingState extends State<SmoothStarRating> {
         size: widget.size,
       );
     } else if (index >
-            currentRating -
-                (widget.allowHalfRating ? halfStarThreshold : 1.0) &&
+        currentRating -
+            (widget.allowHalfRating ? halfStarThreshold : 1.0) &&
         index < currentRating) {
       icon = Icon(
         widget.halfFilledIconData,
@@ -98,133 +96,137 @@ class _SmoothStarRatingState extends State<SmoothStarRating> {
         size: widget.size,
       );
     }
-    final Widget star = widget.isReadOnly
+    final star = widget.isReadOnly
         ? icon
         : kIsWeb
-            ? MouseRegion(
-                onExit: (event) {
-                  if (widget.onRated != null && !isWidgetTapped) {
-                    //reset to zero only if rating is not set by user
-                    setState(() {
-                      currentRating = 0;
-                    });
-                  }
-                },
-                onEnter: (event) {
-                  isWidgetTapped = false; //reset
-                },
-                onHover: (event) {
-                  RenderBox box = context.findRenderObject();
-                  var _pos = box.globalToLocal(event.position);
-                  var i = _pos.dx / widget.size;
-                  var newRating =
-                      widget.allowHalfRating ? i : i.round().toDouble();
-                  if (newRating > widget.starCount) {
-                    newRating = widget.starCount.toDouble();
-                  }
-                  if (newRating < 0) {
-                    newRating = 0.0;
-                  }
-                  setState(() {
-                    currentRating = newRating;
-                  });
-                },
-                child: GestureDetector(
-                  onTapDown: (detail) {
-                    isWidgetTapped = true;
+        ? MouseRegion(
+      onExit: (event) {
+        if (widget.onRated != null && !isWidgetTapped) {
+          setState(() {
+            currentRating = widget.rating;
+          });
+        }
+      },
+      onEnter: (event) {
+        isWidgetTapped = false; //reset
+      },
+      onHover: (event) {
+        final box = context.findRenderObject() as RenderBox;
+        var _pos = box.globalToLocal(event.position);
+        var i = _pos.dx / widget.size;
+        var newRating =
+        widget.allowHalfRating ? i : i.ceil().toDouble();
+        if (newRating > widget.starCount) {
+          newRating = widget.starCount.toDouble();
+        }
+        if (newRating < 0) {
+          newRating = 0.0;
+        }
+        setState(() {
+          currentRating = newRating;
+        });
+      },
+      child: GestureDetector(
+        onTapDown: (detail) {
+          isWidgetTapped = true;
 
-                    RenderBox box = context.findRenderObject();
-                    var _pos = box.globalToLocal(detail.globalPosition);
-                    var i = ((_pos.dx - widget.spacing) / widget.size);
-                    var newRating =
-                        widget.allowHalfRating ? i : i.round().toDouble();
-                    if (newRating > widget.starCount) {
-                      newRating = widget.starCount.toDouble();
-                    }
-                    if (newRating < 0) {
-                      newRating = 0.0;
-                    }
-                    setState(() {
-                      currentRating = newRating;
-                    });
-                    if (widget.onRated != null) {
-                      widget.onRated(normalizeRating(currentRating));
-                    }
-                  },
-                  onHorizontalDragUpdate: (dragDetails) {
-                    isWidgetTapped = true;
+          final box = context.findRenderObject() as RenderBox;
+          var _pos = box.globalToLocal(detail.globalPosition);
+          var i = ((_pos.dx - widget.spacing) / widget.size);
+          var newRating =
+          widget.allowHalfRating ? i : i.ceil().toDouble();
+          if (newRating > widget.starCount) {
+            newRating = widget.starCount.toDouble();
+          }
+          if (newRating < 0) {
+            newRating = 0.0;
+          }
 
-                    RenderBox box = context.findRenderObject();
-                    var _pos = box.globalToLocal(dragDetails.globalPosition);
-                    var i = _pos.dx / widget.size;
-                    var newRating =
-                        widget.allowHalfRating ? i : i.round().toDouble();
-                    if (newRating > widget.starCount) {
-                      newRating = widget.starCount.toDouble();
-                    }
-                    if (newRating < 0) {
-                      newRating = 0.0;
-                    }
-                    setState(() {
-                      currentRating = newRating;
-                    });
-                    debounceTimer?.cancel();
-                    debounceTimer = Timer(Duration(milliseconds: 100), () {
-                      if (widget.onRated != null) {
-                        currentRating = normalizeRating(newRating);
-                        widget.onRated(currentRating);
-                      }
-                    });
-                  },
-                  child: icon,
-                ),
-              )
-            : GestureDetector(
-                onTapDown: (detail) {
-                  RenderBox box = context.findRenderObject();
-                  var _pos = box.globalToLocal(detail.globalPosition);
-                  var i = ((_pos.dx - widget.spacing) / widget.size);
-                  var newRating =
-                      widget.allowHalfRating ? i : i.round().toDouble();
-                  if (newRating > widget.starCount) {
-                    newRating = widget.starCount.toDouble();
-                  }
-                  if (newRating < 0) {
-                    newRating = 0.0;
-                  }
-                  newRating = normalizeRating(newRating);
-                  setState(() {
-                    currentRating = newRating;
-                  });
-                },
-                onTapUp: (e) {
-                  if (widget.onRated != null) widget.onRated(currentRating);
-                },
-                onHorizontalDragUpdate: (dragDetails) {
-                  RenderBox box = context.findRenderObject();
-                  var _pos = box.globalToLocal(dragDetails.globalPosition);
-                  var i = _pos.dx / widget.size;
-                  var newRating =
-                      widget.allowHalfRating ? i : i.round().toDouble();
-                  if (newRating > widget.starCount) {
-                    newRating = widget.starCount.toDouble();
-                  }
-                  if (newRating < 0) {
-                    newRating = 0.0;
-                  }
-                  setState(() {
-                    currentRating = newRating;
-                  });
-                  debounceTimer?.cancel();
-                  debounceTimer = Timer(Duration(milliseconds: 100), () {
-                    if (widget.onRated != null) {
-                      currentRating = normalizeRating(newRating);
-                      widget.onRated(currentRating);
-                    }
-                  });
-                },
-                child: icon,
-              );
+          setState(() {
+            currentRating =
+            currentRating == widget.rating ? 0.0 : currentRating;
+          });
+          widget.onRated?.call(normalizeRating(currentRating));
+        },
+        onHorizontalDragUpdate: (dragDetails) {
+          isWidgetTapped = true;
+
+          final box = context.findRenderObject() as RenderBox;
+          var _pos = box.globalToLocal(dragDetails.globalPosition);
+          var i = _pos.dx / widget.size;
+          var newRating =
+          widget.allowHalfRating ? i : i.ceil().toDouble();
+          if (newRating > widget.starCount) {
+            newRating = widget.starCount.toDouble();
+          }
+          if (newRating < 0) {
+            newRating = 0.0;
+          }
+          setState(() {
+            currentRating = newRating;
+          });
+          debounceTimer?.cancel();
+          debounceTimer = Timer(Duration(milliseconds: 100), () {
+            widget.onRated?.call(normalizeRating(newRating));
+          });
+        },
+        onTapUp: (e) {
+          setState(() {
+            currentRating =
+            currentRating == widget.rating ? 0.0 : currentRating;
+          });
+          widget.onRated?.call(currentRating);
+        },
+        child: icon,
+      ),
+    )
+        : GestureDetector(
+      onTapDown: (detail) {
+        final box = context.findRenderObject() as RenderBox;
+        var _pos = box.globalToLocal(detail.globalPosition);
+        var i = ((_pos.dx - widget.spacing) / widget.size);
+        var newRating =
+        widget.allowHalfRating ? i : i.ceil().toDouble();
+        if (newRating > widget.starCount) {
+          newRating = widget.starCount.toDouble();
+        }
+        if (newRating < 0) {
+          newRating = 0.0;
+        }
+        newRating = normalizeRating(newRating);
+        setState(() {
+          currentRating = newRating;
+        });
+      },
+      onTapUp: (e) {
+        setState(() {
+          currentRating =
+          currentRating == widget.rating ? 0.0 : currentRating;
+        });
+        widget.onRated?.call(currentRating);
+      },
+      onHorizontalDragUpdate: (dragDetails) {
+        final box = context.findRenderObject() as RenderBox;
+        var _pos = box.globalToLocal(dragDetails.globalPosition);
+        var i = _pos.dx / widget.size;
+        var newRating =
+        widget.allowHalfRating ? i : i.ceil().toDouble();
+        if (newRating > widget.starCount) {
+          newRating = widget.starCount.toDouble();
+        }
+        if (newRating < 0) {
+          newRating = 0.0;
+        }
+        setState(() {
+          currentRating = newRating;
+        });
+        debounceTimer?.cancel();
+        debounceTimer = Timer(Duration(milliseconds: 100), () {
+          widget.onRated?.call(normalizeRating(newRating));
+        });
+      },
+      child: icon,
+    );
 
     return star;
   }
