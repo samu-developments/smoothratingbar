@@ -9,7 +9,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  var rating = 0.0;
+  var rating = 3.0;
 
   @override
   Widget build(BuildContext context) {
@@ -23,17 +23,17 @@ class _MyAppState extends State<MyApp> {
         body: Center(
             child: SmoothStarRating(
           rating: rating,
-          size: 65,
+          isReadOnly: false,
+          size: 80,
           filledIconData: Icons.star,
           halfFilledIconData: Icons.star_half,
           defaultIconData: Icons.star_border,
           starCount: 5,
-          allowHalfRating: false,
+          allowHalfRating: true,
           spacing: 2.0,
-          onRatingChanged: (value) {
-            setState(() {
-              rating = value;
-            });
+          onRated: (value) {
+            print("rating value -> $value");
+            // print("rating value dd -> ${value.truncate()}");
           },
         )),
       ),
