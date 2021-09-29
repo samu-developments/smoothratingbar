@@ -1,5 +1,5 @@
 
-A Star rating with touch and swipe rate enabled
+A Star rating with touch and swipe rate enabled. This is an updated version of https://github.com/thangmam/smoothratingbar addressing several issues I had. Null safe.
 
 * Read only and adjustable rating
 * Web Support
@@ -18,12 +18,14 @@ In your flutter project add the dependency:
 ```
     dependencies:
         ...
-        smooth_star_rating: 1.1.1
+        smooth_star_rating_v2:
+            git:
+              url: https://github.com/samu-developments/smoothratingbar.git
 ```
 
 ## Usage example
 ``` 
-import 'package:smooth_star_rating/smooth_star_rating.dart'; 
+import 'package:smooth_star_rating_v2/smooth_star_rating.dart';
 ``` 
 
 ```java
@@ -69,6 +71,3 @@ isReadOnly                      -   true for read only star.False by default
 ![alt text](https://raw.githubusercontent.com/thangmam/smoothratingbar/master/screenshots/halfrating.gif  "Half Rating")
 
 ### MIT LICENSE
-
-### Let me know if you find any bugs/issues.Thanks.
- [<img src="https://camo.githubusercontent.com/d5d24e33e2f4b6fe53987419a21b203c03789a8f/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f446f6e6174652d50617950616c2d677265656e2e737667">](https://www.paypal.me/thangmam)
